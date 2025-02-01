@@ -16,6 +16,7 @@ import re
 import json
 import platform
 from pathlib import Path
+from functools import reduce
 
 app = adsk.core.Application.get()
 ui = app.userInterface
@@ -109,7 +110,7 @@ def get_default_upload_directory() -> str:
     return str(upload_dir)
 
 def get_selected_button(buttons_row: adsk.core.ButtonRowCommandInput):
-    return list(filter(lambda x: x.isSelected, buttons_row.listItems)).pop()
+    return next(iter(list(filter(lambda x: x.isSelected, buttons_row.listItems))))
 
 def get_selected_button_and_deselect(buttons_row: adsk.core.ButtonRowCommandInput):
     btn = get_selected_button(buttons_row)
@@ -125,3 +126,8 @@ def dump_to_json(dict: dict, path: str):
 def open_json_to_dict(path: str):
     with open(path, 'r') as infile:
         return json.loads(infile.read())
+
+def create_acronym(phrase: str):
+    words = re.split(r'[;,\._\-\s]+', phrase)
+
+    return reduce(lambda x, y: f'{x}{y[0].upper()}', [''] + words)

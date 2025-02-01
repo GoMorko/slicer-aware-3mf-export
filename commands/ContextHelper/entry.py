@@ -65,6 +65,25 @@ parts_appearance_settings = {
     },
 }
 
+class ModEntityStack:
+    def __init__(self):
+        self._entities = {}
+
+    def append(self, entity, entity_tuple):
+        self._entities[entity.entityToken] = entity_tuple
+
+    def remove(self, entity):
+        if self._entities.get(entity.entityToken):
+            del self._entities[entity.entityToken]
+
+    def clear(self):
+        self._entities.clear()
+
+    def get_stack(self):
+        return list(self._entities.values())
+
+mod_entities_stack = ModEntityStack()
+
 ################
 ## BOILERPLATE
 ################
@@ -124,18 +143,24 @@ def stop():
     if toolbar_tab.toolbarPanels.count == 0:
         toolbar_tab.deleteMe()
 
-    unload_plugin_materials()
+    if config.F__UNLOAD_PLUGIN_MATERIAL_LIBRARY_ON_STOP:
+        unload_plugin_materials()
 
 # Function to be called when a user clicks the corresponding button in the UI.
 def command_created(args: adsk.core.CommandCreatedEventArgs):
+    global mod_entities_stack
+
     futil.log(f'{CMD_NAME} Command Created Event')
 
     # Connect to the events that are needed by this command.
     futil.add_handler(args.command.execute, command_execute, local_handlers=local_handlers)
     futil.add_handler(args.command.inputChanged, command_input_changed, local_handlers=local_handlers)
     futil.add_handler(args.command.destroy, command_destroy, local_handlers=local_handlers)
+    futil.add_handler(args.command.executePreview, command_execute_preview, local_handlers=local_handlers)
 
     inputs = args.command.commandInputs
+
+    mod_entities_stack.clear()
 
     prepare_widget_view(inputs)
 
@@ -145,7 +170,12 @@ def command_execute(args: adsk.core.CommandEventArgs):
 
     inputs = args.command.commandInputs
 
+    apply_context_to_bodies()
+
     save_plugin_settings()
+
+def command_execute_preview(args: adsk.core.CommandEventArgs):
+    apply_context_to_bodies()
 
 # This function will be called when the user changes anything in the command dialog.
 def command_input_changed(args: adsk.core.InputChangedEventArgs):
@@ -194,6 +224,8 @@ def helpers_tab(parent_inputs: adsk.core.CommandInputs):
     for o_type in OBJECT_TYPES:
         mod_body_buttons_list_items.add(o_type, False, os.path.join(mod_buttons_icons, o_type.lower()))
 
+    mod_body_buttons_list_items.add('Reset Body', False, os.path.join(mod_buttons_icons, '_reset'))
+
     ## Should apply configured appearance for each type of body (based on parts_appearance_settings)
     inputs.addBoolValueInput('use_appearance', 'Apply Appearance', True, '', use_appearance)
 
@@ -212,7 +244,7 @@ def appearance_settings_tab(parent_inputs: adsk.core.CommandInputs):
     table.hasGrid = False
 
     # get reference to plugin materials that should have had loaded during plugin boot.
-    a_m = load_plugin_materials()
+    a_m = get_plugin_materials()
 
     a_lib = a_m.get('a_lib')
     a_icons_dict = a_m.get('a_icons_dict', {})
@@ -264,10 +296,10 @@ def appearance_settings_tab(parent_inputs: adsk.core.CommandInputs):
 ## BEHAVIOR
 ################
 
-def rename_selected_bodies(mod_selections: adsk.core.SelectionCommandInput, object_type: str):
-    m_libs = get_plugin_materials()
+def add_context_to_bodies(mod_selections: adsk.core.SelectionCommandInput, object_type: str):
+    global mod_entities_stack
+    m_libs = get_plugin_materials().get('libs', [])
 
-    mod_tuples = []
     for s_idx in range(mod_selections.selectionCount):
         selection = mod_selections.selection(s_idx)
         entity = selection.entity
@@ -283,15 +315,27 @@ def rename_selected_bodies(mod_selections: adsk.core.SelectionCommandInput, obje
         if a_id and a_use and use_appearance:
             new_appearance = find_appearance_in_material_libraries(a_id, m_libs)
 
-        mod_tuples.append([entity, new_name, new_appearance])
+        mod_entities_stack.append(entity, [entity, new_name, new_appearance])
 
-    # modify after selection iteration, otherwise the selection will lose reference to bodies.
-    # also auto deselects.
-    for [entity, name, appearance] in mod_tuples:
+    mod_selections.clearSelection()
+
+def apply_context_to_bodies():
+    for [entity, name, appearance] in mod_entities_stack.get_stack():
         entity.name = name
 
         if appearance:
             entity.appearance = appearance
+
+def clear_context_from_stack(mod_selections: adsk.core.SelectionCommandInput):
+    global mod_entities_stack
+
+    for s_idx in range(mod_selections.selectionCount):
+        selection = mod_selections.selection(s_idx)
+        entity = selection.entity
+
+        mod_entities_stack.remove(entity)
+
+    mod_selections.clearSelection()
 
 def load_plugin_settings(a_lib: adsk.core.MaterialLibrary):
     global parts_appearance_settings
@@ -356,12 +400,25 @@ def load_plugin_materials():
     load_plugin_settings(a_lib)
 
 def get_plugin_materials() -> list[adsk.core.MaterialLibrary]:
-    a_m = load_plugin_materials()
+    a_lib = app.materialLibraries.itemByName(APPEARANCE_LIB_NAME)
+    f_lib = app.materialLibraries.itemByName(FAVORITES_LIB_NAME)
 
-    return [
-        a_m['a_lib'],
-        a_m['f_lib'],
-    ]
+    a_icons_json_path = os.path.join(DIST_RESOURCES_FOLDER, f'{APPEARANCE_LIB_ICONS_FILENAME}')
+    f_icons_json_path = os.path.join(DIST_RESOURCES_FOLDER, f'{FAVORITES_ICONS_FILENAME}')
+
+    a_icons_dict = futil.open_json_to_dict(a_icons_json_path)
+    f_icons_dict = futil.open_json_to_dict(f_icons_json_path)
+
+    return {
+        'a_lib': a_lib,
+        'a_icons_dict': a_icons_dict,
+        'f_lib': app.materialLibraries.itemByName(FAVORITES_LIB_NAME),
+        'f_icons_dict': f_icons_dict,
+        'libs': [
+            a_lib,
+            f_lib,
+        ]
+    }
 
 def unload_plugin_materials():
     app.materialLibraries.itemByName(APPEARANCE_LIB_NAME).unload()
@@ -377,7 +434,13 @@ def unload_plugin_materials():
 ################
 
 def to_context_aware_format(parent_name: str, obj_type: str, obj_name: str):
-    return f'${parent_name}__{obj_type}_{obj_name}'
+    acronym_parent = futil.create_acronym(parent_name)
+    context_prefix = f'${acronym_parent}__{obj_type}_'
+
+    if obj_name.startswith(f'${acronym_parent}'):
+        obj_name = next(iter(obj_name.split('_')[::-1]), obj_name)
+
+    return f'{context_prefix}{obj_name}'
 
 def get_shorthand_object_type(o_type: str):
     # MAIN
@@ -423,7 +486,11 @@ def on_change_mod_body_buttons(inputs: adsk.core.CommandInputs):
     if not mod_selections.selectionCount:
         return
 
-    rename_selected_bodies(mod_selections, btn.name)
+    if btn.name == 'Reset Body':
+        clear_context_from_stack(mod_selections)
+        return
+
+    add_context_to_bodies(mod_selections, btn.name)
 
 def on_change_use_appearance(inputs: adsk.core.CommandInputs):
     global use_appearance

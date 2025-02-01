@@ -5,7 +5,11 @@
 # Set to False to remove most log messages from text palette
 import os
 
+PROD = False
+
 DEBUG = True
+
+F__UNLOAD_PLUGIN_MATERIAL_LIBRARY_ON_STOP = PROD
 
 ADDIN_NAME = os.path.basename(os.path.dirname(__file__))
 
