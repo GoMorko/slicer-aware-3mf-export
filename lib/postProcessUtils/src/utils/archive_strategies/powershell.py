@@ -1,6 +1,7 @@
 from subprocess import run
 
 from ...... import config
+from ...errors import BusinessLogicException
 
 __all__ = [
     "extract",
@@ -62,10 +63,13 @@ $zip.Dispose();
     return command
 
 def run_command(command: str):
-    process = run([
-        'powershell', '-ExecutionPolicy', 'Bypass', '-Command',
-        command.replace('\n', ''),
-    ], capture_output=config.DEBUG, text=config.DEBUG, check=not config.DEBUG, shell=True)
+    try:
+        process = run([
+            'powershell', '-ExecutionPolicy', 'Bypass', '-Command',
+            command.replace('\n', ''),
+        ], capture_output=config.DEBUG, text=config.DEBUG, check=not config.DEBUG, shell=True)
+    except Exception as err:
+        raise BusinessLogicException(f'Unable to extract archive. Maybe extraction folder already exists? Try removing it.\n\nOriginal:\n{err}')
 
     if config.DEBUG:
         print(f'    [powershell][zip][stdout]: {process.stdout}')

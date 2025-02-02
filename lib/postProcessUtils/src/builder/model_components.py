@@ -98,7 +98,7 @@ def get_context_from_name(name: str) -> ObjectContext:
             "name": object_name
         }
     except Exception as err:
-        raise Exception(f'Unable to parse object name into context: "{name}"\n\nOriginal message: "{err}"\n')
+        raise BusinessException(f'Unable to parse object name into context: "{name}"\n\nOriginal message: "{err}"\n')
 
 def apply_basic_modifications(object_element, object_context: ObjectContext):
     # remove attributes slicer usually removes on file save

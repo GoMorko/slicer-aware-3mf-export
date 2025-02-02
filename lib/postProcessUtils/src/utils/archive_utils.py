@@ -5,7 +5,7 @@ from os.path import join
 from pathlib import PurePath
 
 from ..... import config
-from ..errors import BusinessException
+from ..errors import BusinessException, BusinessLogicException
 from .archive_strategies import Zip, ZipFile, Powershell
 
 __all__ = [
@@ -41,6 +41,8 @@ def do_extract(catalog_path: str, file_path_zip: str):
 
         raise BusinessException(f'OS "{SYSTEM_PLATFORM}" extraction strategy not implemented. Falling back to ZipFile.')
 
+    except BusinessLogicException as err:
+        raise err
     except BusinessException as err:
         if config.DEBUG:
             raise err

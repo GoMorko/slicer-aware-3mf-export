@@ -1,6 +1,7 @@
 import shutil
 import argparse
 
+from .errors import BusinessLogicException
 from .builder import rebuild_files
 from .utils import extract_from_archive, archive_as_3mf
 
@@ -16,11 +17,13 @@ def main():
 def process_file(path: str):
     catalog_path = extract_from_archive(path)
 
-    rebuild_files(catalog_path)
-
-    archive_as_3mf(catalog_path)
-
-    shutil.rmtree(catalog_path)
+    try:
+        rebuild_files(catalog_path)
+        archive_as_3mf(catalog_path)
+    except BusinessLogicException as err:
+        raise err
+    finally:
+        shutil.rmtree(catalog_path)
 
 if __name__ == "__main__":
     main()
