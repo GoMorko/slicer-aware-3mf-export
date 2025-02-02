@@ -1,1 +1,1 @@
-from .mf_xml import process_file
+from .src.handle import process_file as process_file

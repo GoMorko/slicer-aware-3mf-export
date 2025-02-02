@@ -208,8 +208,10 @@ def execute_export(inputs: adsk.core.CommandInputs):
     if (isExportSuccess):
         try:
             pputil.process_file(f'{output_path}.3mf')
-        except:
-            ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+        except Exception as err:
+            if config.DEBUG:
+                raise err
+            ui.messageBox(f'Error:\n"{err}"\n\n---------Trace:\n\n{traceback.format_exc()}')
 
 ################
 ## UTILS
