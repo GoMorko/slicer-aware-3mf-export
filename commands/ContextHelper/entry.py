@@ -116,7 +116,11 @@ def start():
     # Now you can set various options on the control such as promoting it to always be shown.
     control.isPromoted = IS_PROMOTED
 
-    load_plugin_materials()
+    try:
+        load_plugin_materials()
+    except Exception as err:
+        unload_plugin_materials()
+        raise err
 
 # Executed when add-in is stopped.
 def stop():
@@ -426,8 +430,8 @@ def unload_plugin_materials():
     a_icons_path = os.path.join(DIST_RESOURCES_FOLDER, f'{APPEARANCE_LIB_NAME}')
     f_icons_path = os.path.join(DIST_RESOURCES_FOLDER, f'{FAVORITES_LIB_NAME}')
 
-    shutil.rmtree(a_icons_path)
-    shutil.rmtree(f_icons_path)
+    shutil.rmtree(a_icons_path, ignore_errors=True)
+    shutil.rmtree(f_icons_path, ignore_errors=True)
 
 ################
 ## UTILS

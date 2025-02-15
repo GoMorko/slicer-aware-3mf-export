@@ -12,7 +12,10 @@ import zipfile
 import pathlib
 import shutil
 
-from ...dist.packages.PIL import Image
+try:
+    from ...dist.packages.PIL import Image
+except:
+    from . import pseudo_pil as Image
 
 MAIN_RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'resources')
 
