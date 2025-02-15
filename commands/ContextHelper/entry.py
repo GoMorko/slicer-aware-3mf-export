@@ -35,12 +35,7 @@ APPEARANCE_LIB_ICONS_FILENAME = f'{APPEARANCE_LIB_NAME}.json'
 FAVORITES_LIB_NAME = 'Favorites Library'
 FAVORITES_ICONS_FILENAME = f'{FAVORITES_LIB_NAME}.json'
 
-OBJECT_TYPES = [
-    'MAIN',
-    'PART',
-    'MODIFIER',
-    'NEGATIVE',
-]
+OBJECT_TYPES = pputil.consts.object_types
 
 # Holds references to event handlers
 local_handlers = []
@@ -60,6 +55,14 @@ parts_appearance_settings = {
         'use_appearance': True,
     },
     'NEGATIVE': {
+        'id': None,
+        'use_appearance': True,
+    },
+    'SUPPORT-BLOCKER': {
+        'id': None,
+        'use_appearance': True,
+    },
+    'SUPPORT-ENFORCER': {
         'id': None,
         'use_appearance': True,
     },
@@ -269,7 +272,7 @@ def appearance_settings_tab(parent_inputs: adsk.core.CommandInputs):
     for o_type in OBJECT_TYPES:
         material_row_title = inputs.addTextBoxCommandInput(f'material_row_title_{o_type}', o_type, o_type.capitalize(), 1, True)
         material_drop_down = inputs.addDropDownCommandInput(f'material_drop_down_{o_type}', '', adsk.core.DropDownStyles.LabeledIconDropDownStyle)
-        material_should_apply = inputs.addBoolValueInput(f'use_material_appearance_{o_type}', 'Use Appearance', True, '', parts_appearance_settings[o_type].get('use_appearance', False))
+        material_should_apply = inputs.addBoolValueInput(f'use_material_appearance_{o_type}', 'Use Appearance', True, '', parts_appearance_settings.get(o_type, {}).get('use_appearance', False))
 
         types_current_appearance_id = parts_appearance_settings.get(o_type, {}).get('id', None)
 
@@ -447,18 +450,7 @@ def to_context_aware_format(parent_name: str, obj_type: str, obj_name: str):
     return f'{context_prefix}{obj_name}'
 
 def get_shorthand_object_type(o_type: str):
-    # MAIN
-    # PART
-    # MODIFIER
-    # NEGATIVE
-
-    match(o_type):
-        case 'MODIFIER':
-            return 'MOD'
-        case 'NEGATIVE':
-            return 'NEG'
-
-    return o_type
+    return pputil.consts.object_types_to_shorthand.get(o_type, o_type)
 
 def find_appearance_in_material_libraries(id: str, m_libs: list[adsk.core.MaterialLibrary]):
     for lib in m_libs:

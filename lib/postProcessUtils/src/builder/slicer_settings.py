@@ -3,7 +3,7 @@ from os.path import join
 from itertools import chain
 
 from ..utils.xml_utils import *
-from ..common.consts import types_to_parts
+from ..common.consts import shorthand_object_types_to_parts
 from ..common.types import ObjectModel
 
 __all__ = [
@@ -43,7 +43,7 @@ def create_model_settings(catalog_path: str, model_dict):
         ET.ElementTree(config_root).write(file, xml_declaration=True, encoding='UTF-8')
 
 def type_to_part_name(type_name: str) -> str:
-    return types_to_parts.get(type_name, 'normal_part')
+    return shorthand_object_types_to_parts.get(type_name, 'normal_part')
 
 # ./Metadata/model_settings.config
 # config->object->part
