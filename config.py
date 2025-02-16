@@ -5,9 +5,9 @@
 # Set to False to remove most log messages from text palette
 import os
 
-PROD = False
+PROD = True
 
-DEBUG = True
+DEBUG = False
 
 F__UNLOAD_PLUGIN_MATERIAL_LIBRARY_ON_STOP = PROD
 
@@ -22,8 +22,8 @@ COMPANY_NAME = 'WillowBranch'
 
 design_workspace = 'FusionSolidEnvironment'
 tools_tab_id = "ToolsTab"
-my_tab_name = "test"  # Only used if creating a custom Tab
+my_tab_name = "ExportMod3MF"  # Only used if creating a custom Tab
 
-my_panel_id = f'{ADDIN_NAME}_panel_987'
+my_panel_id = f'{ADDIN_NAME}_ExportMod3MF'
 my_panel_name = ADDIN_NAME
 my_panel_after = ''
