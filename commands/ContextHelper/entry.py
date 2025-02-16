@@ -58,11 +58,11 @@ parts_appearance_settings = {
         'id': None,
         'use_appearance': True,
     },
-    'SUPPORT-BLOCKER': {
+    'SUPPORT_BLOCKER': {
         'id': None,
         'use_appearance': True,
     },
-    'SUPPORT-ENFORCER': {
+    'SUPPORT_ENFORCER': {
         'id': None,
         'use_appearance': True,
     },
