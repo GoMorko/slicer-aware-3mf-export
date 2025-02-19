@@ -4,9 +4,9 @@
 	"id":	"7850e2c2-fae1-445f-a441-adf7ad9a2028",
 	"author":	"GoMorko",
 	"description":	{
-		"":	""
+		"":	"Fusion 360 add-in that simplifies the export of 3MF models for 3D printing, specifically for designs that extensively use modifier objects in the slicer."
 	},
-	"version":	"",
+	"version":	"0.1.0",
 	"runOnStartup":	true,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true
