@@ -10,6 +10,9 @@ Every modifier, support enforcer / blocker, just like any regular body, can be m
 
 Similarly, for prints with many optional parts or variants, instead slicing multiple files or adding trays in the same 3MF file. Instead we can provide a full set of modifiers and negative parts for the end user to decide, modify on their own.
 
+> [!Tip]
+> Basically change regular bodies into slicer special objects (like modifiers) during export.
+
 ---
 
 ### Installation
@@ -34,11 +37,10 @@ Upon which the plugin should show up in Utils tab of Fusion 360 Design section.
 
 #### MOD parts
 
-Basically it automates the task of changing objects types in the slicer.
+> [!Tip]
+> Basically change regular bodies into slicer special objects (like modifiers) during export.
 
-Instead manually changing part into a modifier, negative part and so on in the slicer.
-
-Plugin does this automatically during export:
+Rather than after an export changing the parts into a modifiers manually in the slicer, the plugin rewrites them to such directly in 3MF file.
 
 <p align="center">
     <img src="./resources/docs/pictures/d31fe927-b023-417d-8a2a-a25ed797878b.png" style="width: 45%;" align="">
@@ -49,7 +51,8 @@ Plugin does this automatically during export:
 
 #### Organize parts in a single space
 
-Instead recreating or importing objects as parts in the slicer. We can just treat them as any other Fusion 360 bodies grouped in a component. It's especially convenient when creating modifier parts, to apply fuzzy skin, or number of walls in selected places.
+Instead recreating or importing objects as special parts in the slicer manually. We can just treat them as any other Fusion 360 bodies under a component.
+It's especially convenient when we need modifier parts in precisely chosen places - ie. to apply fuzzy skin, or increase number of walls.
 
 <p align="center">
     <img src="./resources/docs/pictures/4b13f10b-8e34-4b58-aae5-abc01846bcd9.png" style="width: 45%;" align="">
@@ -74,8 +77,6 @@ Plugin automatically applies Fusion 360 appearances as filaments colors*
 
 *For now better to leave it for slicers to handle.*
 </details>
-
-<br>
 
 <details>
 <summary>Example of an export containing multi color model:</summary>
@@ -127,8 +128,6 @@ Although child components are included when exporting a parent.
 > [!NOTE]
 > All bodies intended for export MUST use the context aware naming convention - otherwise the plugin will fail. Marking the objects as “*not visible*” (eye icon) will omit them from the export.
 
-<br>
-
 #### ContextHelper - renaming bodies
 
 Bodies can be easily renamed with the ContextHelper:
@@ -159,18 +158,16 @@ In future I might replace it with a standalone config widget, which will link bo
     <img src="./resources/docs/pictures/db25915b-df03-4b35-b376-e052e5e4d31f.png" style="width: 45%;">
 </p>
 
-- $ - static token, MUST be present in order for the processing script to work correctly.
-- PC - unique identifier. Plugin derives it from the name of the component.
-- PART, MAIN, MOD - static token. Readable object types name, which will turn into such parts in the slicer.
+- `$` - static token, MUST be present in order for the processing script to work correctly.
+- `PC` - unique identifier. Plugin derives it from the name of the component.
+- `PART, MAIN, MOD` - static token. Readable object types name, which will turn into such parts in the slicer.
     - *part and main or token that’s unrecognizable - are automatically converted to normal, printable, part.*
-- Outer_Lock, (…) - the original name of our object. This name will show up on the slicer objects list.
-- _ - delimiter token.
-    - Double ‘__’ separates the component name from the type;
-    - Single ‘_’ tells processing script when the object type name has ended *(so the rest of the string is recognized as object name).*
+- `Outer_Lock, (…)` - the original name of our object. This name will show up on the slicer objects list.
+- `_` - delimiter token.
+    - Double `__` separates the component name from the type;
+    - Single `_` tells processing script when the object type name has ended *(so the rest of the string is recognized as object name).*
 
 </details>
-
-<br>
 
 #### ContextHelper - changing object types appearance
 
@@ -195,8 +192,10 @@ All in all the appearances are quite helpful as they make the objects visually d
 - Mind that the plugin unpacks its own and user favorites appearances libraries into “{plugin_install_location}/dist/resources”
     - Currently it’s done only once when plugin is started for the first time. So as a result any new favorites will not show in the object types appearances selection dropdowns.
     - Right now we have to force script to reload those, by removing the “{plugin_install_location}/dist/resources” content
-> [!NOTE]
-> this will also remove the assigned appearances settings. You can avoid this by retaining the “parts_appearance_settings.json” and removing everything else.
+
+        > [!NOTE]
+        > this will also remove the assigned appearances settings. You can avoid this by retaining the “parts_appearance_settings.json” and removing everything else.
+
     - And make sure the “ContextAwareSlicerAppearanceV{n}” library has been removed from Fusion 360 (it’s done automatically on plugin stop, but we can do it manually in F360 “Manage Materials” window).
 - The same goes when the plugin acts up. Reload it entirely by stopping the add-in, remove all dist/resources and ContextAware… library from the Manage Materials and try starting the plugin again.
 - Plugin “requires” pillow package for image resizing. It’ll work without it, but the material miniatures in Appearance selection dropdowns will be given to Fusion 360 in their full size, instead resized to smaller resolutions.
