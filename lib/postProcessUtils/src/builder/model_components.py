@@ -78,7 +78,10 @@ def extract_object_info(object_element, object_context: ObjectContext, model_dic
         'pindex': pindex,
         'color': object_color,
         # numeric id (starting from 1)
-        'extruder_color_idx': str(model_dict.uniq_colors_ref().index(object_color) + 1),
+        # 'extruder_color_idx': str(model_dict.uniq_colors_ref().index(object_color) + 1),
+        # NOTE: since BambuStudio v2.5.0.66 - too high idx causes unknown exception.
+        # since color mapping isn't fully integrated, as quick fix just set a single extruder.
+        'extruder_color_idx': '0',
         'component_name': object_context['component_name'],
         'type': object_context['type'],
         'name': object_context['name'],
@@ -86,6 +89,14 @@ def extract_object_info(object_element, object_context: ObjectContext, model_dic
 
 def get_context_from_name(name: str) -> ObjectContext:
     tokens = name.split('_')
+
+    # allow exporting bodies with generic names as is.
+    if len(tokens) < 3:
+        return {
+            "component_name": name,
+            "type": 'MAIN',
+            "name": name
+        }
 
     try:
         parent_name = tokens[0].lstrip('$')
